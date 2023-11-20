@@ -8,11 +8,9 @@ namespace PokemonReviewApp.Repository
     public class CategoryRepository : ICategoryRepository
     {
         private readonly DataContext _context;
-        private readonly IMapper _mapper;
-        public CategoryRepository(DataContext context, IMapper mapper)
+        public CategoryRepository(DataContext context)
         {
             _context = context;
-            _mapper = mapper;
         }
 
         public bool CategoryExists(int id)
@@ -33,6 +31,18 @@ namespace PokemonReviewApp.Repository
         public ICollection<Pokemon> GetPokemonByCategory(int categoryId)
         {
             return _context.PokemonCategories.Where(e => e.CategoryId == categoryId).Select(c => c.Pokemon).ToList();
+        }
+
+        public bool CreateCategory(Category category)
+        {
+            _context.Add(category);
+            return Save();
+        }
+
+        public bool Save()
+        {
+            var saved = _context.SaveChanges();
+            return saved > 0 ? true : false;
         }
     }
 }

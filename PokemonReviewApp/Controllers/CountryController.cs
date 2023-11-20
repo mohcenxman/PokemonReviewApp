@@ -34,7 +34,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("{countryId}")]
         [ProducesResponseType(200, Type = typeof(Country))]
         [ProducesResponseType(400)]
-        public IActionResult GetCategory(int countryId)
+        public IActionResult GetCountry(int countryId)
         {
             if (!_countryRepository.CountryExists(countryId))
                 return NotFound();
@@ -59,6 +59,38 @@ namespace PokemonReviewApp.Controllers
                 return BadRequest(ModelState);
 
             return Ok(country);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateCountry([FromBody] CountryDto countryCreate)
+        {
+            if (countryCreate == null)
+                return BadRequest(ModelState);
+
+            var country = _countryRepository.GetCountries()
+                .Where(c => c.Name.Trim().ToUpper() == countryCreate.Name.TrimEnd().ToUpper())
+                .FirstOrDefault();
+
+            if (country != null)
+            {
+                ModelState.AddModelError("", "Country already exists");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var countryMap = _mapper.Map<Country>(countryCreate);
+
+            if (!_countryRepository.CreateCountry(countryMap))
+            {
+                ModelState.AddModelError("", "Something went wrong while savin");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok("Successfully created");
         }
     }
 }
